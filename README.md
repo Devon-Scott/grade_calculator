@@ -1,0 +1,1 @@
+This is a rust and egui based version of my GradeWeightCalculator
