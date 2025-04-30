@@ -1,29 +1,29 @@
-mod ui_elements;
-use crate::ui_elements::RowFields;
+pub struct Calculator {}
 
-struct TotalMarks {
-    pub total_marks: f32,
-    pub total_weight: f32,
-}
-
-impl TotalMarks {
-    pub fn new(rows: &vec<RowFields>) -> Self {
-        Self {
-            total_marks: 0.0,
-            total_weight: 0.0,
+impl Calculator {
+    pub fn calculate_str_2_f(tokens: &String) -> Option<f32>{
+        let parsed = Calculator::parse(tokens);
+        if parsed != None {
+            return Some(0.69)
         }
+        None
     }
 
-    pub fn add(&mut self, marks: f32, weight: f32) {
-        self.total_marks += marks * weight;
-        self.total_weight += weight;
+    pub fn weighted_sum(grades: &Vec<f32>, weights: &Vec<f32>) -> Option<f32> {
+        if grades.len() != weights.len() {
+            return None
+        }
+        let mut sum = 0.0;
+        for i in 0..grades.len() {
+            sum += grades[i] * weights[i];
+        }
+        Some(sum)
     }
 
-    pub fn calculate_final_grade(&self) -> Option<f32> {
-        if self.total_weight > 0.0 {
-            Some(self.total_marks / self.total_weight)
-        } else {
-            None
+    fn parse(tokens: &String) -> Option<&String> {
+        if tokens == ""{
+            return Some(tokens)
         }
+        None
     }
 }

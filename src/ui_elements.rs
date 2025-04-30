@@ -3,6 +3,7 @@ pub struct RowFields {
     pub marks: String,
     pub weight: String,
     pub section_grade: String,
+    pub f_section_grade: Option<f32>,
 }
 
 impl RowFields {
@@ -11,7 +12,8 @@ impl RowFields {
             section: String::new(),
             marks: String::new(),
             weight: String::new(),
-            section_grade: ("".to_string()),
+            section_grade: ("%".to_string()),
+            f_section_grade: None
         }
     }
 
@@ -21,6 +23,7 @@ impl RowFields {
             marks: String::new(),
             weight: String::new(),
             section_grade: ("%".to_string()),
+            f_section_grade: None
         }
     }
 }
