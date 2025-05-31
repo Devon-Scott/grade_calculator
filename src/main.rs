@@ -1,4 +1,5 @@
 use eframe::egui;
+use ui_elements::RowHeaders;
 
 mod ui_elements;
 mod calculator;
@@ -21,10 +22,11 @@ fn main() -> eframe::Result {
 }
 
 struct MyApp {
+    row_header: RowHeaders,
     rows: Vec<RowFields>,
     _course_name: String,
     _final_grade: Option<f32>,
-    
+    _final_message: String
 }
 
 impl MyApp {
@@ -35,9 +37,11 @@ impl MyApp {
             rows.push(RowFields::new_named(name.to_string()));
         }
         Self {
+            row_header: RowHeaders::new(),
             rows,
             _course_name: "".to_string(),
             _final_grade: None,
+            _final_message: String::new()
         }
     }
 
@@ -45,9 +49,10 @@ impl MyApp {
         egui::TopBottomPanel::top("header")
             .resizable(false)
             .show(ctx, |ui| {
+                ui.heading("Enter the course name");
+                ui.end_row();
                 ui.horizontal(|ui| {
-                    ui.label("Course Name");
-                    ui.add_space(8.0);
+                    ui.add_space(16.0);
                     ui.add_sized([ui.available_width() / 3.0, 20.0], egui::TextEdit::singleline(&mut self._course_name));
                     ui.add_space(8.0);
                 });
@@ -70,11 +75,7 @@ impl MyApp {
                 .max_col_width(field_w)
                 .show(ui, |ui| {
                     // ——— Headers ———
-                    ui.label("Delete");           // over the delete‐button
-                    ui.label("Section").on_hover_text_at_pointer("Section name");
-                    ui.label("Marks/Total").on_hover_text_at_pointer("Enter a mathematical expression for the marks as a fraction of the total");
-                    ui.label("Section Grade");
-                    ui.label("Weight");
+                    self.row_header.render(ui);
                     ui.end_row();
 
                     // ——— Rows ———
@@ -87,15 +88,20 @@ impl MyApp {
                         {
                             remove_idx = Some(i);
                         }
+
                         // text inputs (equal width)
-                        ui.add_sized([field_w, 20.0], egui::TextEdit::singleline(&mut row.section));
-                        ui.add_sized([field_w, 20.0], egui::TextEdit::singleline(&mut row.marks));
-
-                        row.f_section_grade = Calculator::calculate_str_2_f(&row.marks);
-
-                        ui.label(&row.section_grade);
-                        ui.add_sized([field_w, 20.0], egui::TextEdit::singleline(&mut row.weight));
-
+                        let marks_changed = row.render(ui);
+                        if marks_changed {
+                            calculator::print_parsed(&row.marks);
+                            let temp = Calculator::str_2_f(&row.marks);
+                            if let Ok(grade) = temp {
+                                row.f_section_grade = Some(grade);
+                                row.section_grade = format!("{:.2}%", grade);
+                            } else {
+                                row.f_section_grade = None;
+                                row.section_grade = "Error".to_string();
+                            }
+                        }
                         ui.end_row();
                     }
                     if let Some(i) = remove_idx {
@@ -105,6 +111,22 @@ impl MyApp {
             );
         });
     }
+
+    fn render_message(&mut self, ctx: &egui::Context) {
+        egui::TopBottomPanel::bottom("message_panel")
+            .min_height(80.0)
+            .show(ctx, |ui| {
+                ui.horizontal(|ui| {
+                    ui.label("Final Grade:");
+                    if let Some(grade) = self._final_grade {
+                        ui.label(format!("{:.2}", grade));
+                    } else {
+                        ui.label("N/A");
+                    }
+                });
+            });
+    }
+
 }
 
 impl eframe::App for MyApp {
@@ -112,6 +134,7 @@ impl eframe::App for MyApp {
         
         self.render_header(ctx);
         self.render_grid(ctx);
+        self.render_message(ctx);
         
         egui::TopBottomPanel::bottom("add_row_panel")
             .min_height(40.0)
@@ -122,18 +145,35 @@ impl eframe::App for MyApp {
                         self.rows.push(RowFields::new());
                     }
                     if ui.button("Calculate").clicked() {
+                        let mut status = true;
                         let mut grades = Vec::new();
                         let mut weights = Vec::new();
                         // TODO enforce matching indices
                         for row in self.rows.iter() {
-                            if let Some(grade) = row.f_section_grade {
-                                grades.push(grade);
-                            }
-                            if let Ok(weight) = row.weight.parse::<f32>() {
-                                weights.push(weight);
+                            if let Some(grade) = row.f_section_grade{
+                                if let Ok(weight) = row.weight.parse::<f32>() {
+                                    grades.push(grade);
+                                    weights.push(weight);
+                                }
+                                else {
+                                    // Change this whole thing to a function, return the message (either success or error)
+                                    // and set the message to be displayed
+                                    status = false;
+                                }
                             }
                         }
-                        self._final_grade = Calculator::weighted_sum(&grades, &weights);
+                        if status {
+                            self._final_grade = Calculator::weighted_sum(&grades, &weights);
+                            self._final_message = if let Some(grade) = self._final_grade {
+                                format!("Final grade is {:.2}%", grade)
+                            } else {
+                                String::from("Error calculating final grade")
+                            };
+                        }
+                        else {
+                            self._final_message = String::from("Each grade must have a corresponding weight");
+                        }
+                        
                     }
                 });
             });
