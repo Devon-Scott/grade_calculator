@@ -64,7 +64,7 @@ impl MyApp {
     fn render_grid(&mut self, ctx: &egui::Context) {
         egui::CentralPanel::default().show(ctx, |ui| {
             // compute column widths
-            let total_width = ui.available_width();
+            let total_width = ui.available_width() - 16.0;
             let spacing_x  = 8.0;
             let delete_w   = 24.0;              
             // subtract out the 4 gaps between columns:
@@ -104,6 +104,7 @@ impl MyApp {
                                 row.section_grade = "Error".to_string();
                             }
                         }
+
                         ui.end_row();
                     }
                     if let Some(i) = remove_idx {

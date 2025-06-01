@@ -69,14 +69,53 @@ impl Lexer {
                     
                     // Parse the collected number
                     match current_number.parse::<f32>() {
-                        Ok(num) => tokens.push(Token::Number(num)),
+                        Ok(num) => {
+                            tokens.push(Token::Number(num));
+                            
+                            // Check for implicit multiplication: number followed by '('
+                            // Skip any whitespace first
+                            while let Some(&next_c) = chars.peek() {
+                                if next_c.is_whitespace() {
+                                    chars.next();
+                                } else {
+                                    break;
+                                }
+                            }
+                            
+                            // If next non-whitespace char is '(', insert multiplication
+                            if let Some(&'(') = chars.peek() {
+                                tokens.push(Token::Operator('*'));
+                            }
+                        }
                         Err(_) => return Err(ParseError::InvalidNumber(current_number)),
                     }
                     current_number.clear();
                 }
                 '+' | '-' | '*' | '/' | '(' | ')' => {
-                    tokens.push(Token::Operator(c));
-                    chars.next();
+                    // Handle ')' followed by '(' or number for implicit multiplication
+                    if c == ')' {
+                        tokens.push(Token::Operator(c));
+                        chars.next();
+                        
+                        // Skip whitespace
+                        while let Some(&next_c) = chars.peek() {
+                            if next_c.is_whitespace() {
+                                chars.next();
+                            } else {
+                                break;
+                            }
+                        }
+                        
+                        // Check if next is '(' or a number
+                        if let Some(&next_c) = chars.peek() {
+                            if next_c == '(' || next_c.is_digit(10) {
+                                tokens.push(Token::Operator('*'));
+                            }
+                        }
+                    } else {
+                        tokens.push(Token::Operator(c));
+                        chars.next();
+                    }
                 }
                 ' ' | '\t' | '\n' => {
                     chars.next(); // Skip whitespace
@@ -343,6 +382,20 @@ mod tests {
     }
 
     #[test]
+    fn test_parentheses() {
+        assert_eq!(Calculator::str_2_f("(2 + 3) * (4 - 1)").unwrap(), 15.0);
+        assert_eq!(Calculator::str_2_f("((2 + 3) * 4) - 5").unwrap(), 15.0);
+        assert_eq!(Calculator::str_2_f("10 / (2 + (3 - 1))").unwrap(), 2.5);
+    }
+
+    #[test]
+    fn test_implicit_multiplication() {
+        assert_eq!(Calculator::str_2_f("2(3 + 4)").unwrap(), 14.0);
+        assert_eq!(Calculator::str_2_f("5(2 + 3) - 10").unwrap(), 15.0);
+        assert_eq!(Calculator::str_2_f("3(4 - 1) + 2").unwrap(), 11.0);
+    }
+
+    #[test]
     fn test_errors() {
         assert!(Calculator::str_2_f("2 +").is_err());
         assert!(Calculator::str_2_f("2 + + 3").is_err());
@@ -362,16 +415,3 @@ mod tests {
         assert_eq!(Calculator::weighted_sum(&vec![1.0], &vec![1.0, 2.0]), None);
     }
 }
-
-// fn main() {
-//     // Example usage
-//     print_parsed("2 + 3 * 4");
-//     print_parsed("(2 + 3) * 4");
-//     print_parsed("-5 + 3");
-//     print_parsed("10 / (2 + 3) * 4");
-//     print_parsed("-(5 + 3)");
-    
-//     // This will show errors
-//     print_parsed("2 + + 3");
-//     print_parsed("(2 + 3");
-// }
