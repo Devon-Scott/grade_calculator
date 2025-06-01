@@ -14,3 +14,19 @@ Download the latest `.exe` from the [Releases page](https://github.com/Devon-Sco
 ### Build from source
 ```bash
 cargo install --git https://github.com/Devon-Scott/grade_calculator
+```
+
+## Usage
+
+- In the "Marks / Total" section, you can input a mathematical expression that represents your earned scores out of the total marks available, and you can mouse over the header to see an example format:
+
+<p align="center">
+  <img src="assets/Marks%20demo.png" width="500" alt="Marks example"/>
+</p>
+
+
+- In the "Weights" section, enter a value that represents the total weight for that section of the course. For example, if the assignments were worth 30% of the grade, simply input 30
+
+<p align="center">
+  <img src="assets/Weights.png" width="500" alt="Weights example"/>
+</p>
