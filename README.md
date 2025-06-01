@@ -5,3 +5,12 @@ I decided to remake the project in Rust for several reasons:
 - I wasn't happy with the layout of the Qt-based project, and I knew it could be rearranged to be organized better
 - The parser I previously made wasn't very robust. It could handle basic syntax and do the job, but I wanted to explore how to properly parse mathematical expressions and turn them into usable values. 
 - I also liked seeing how easy it is to add test cases to Rust files
+
+## Installation
+
+### Windows
+Download the latest `.exe` from the [Releases page](https://github.com/Devon-Scott/grade_calculator/releases)
+
+### Build from source
+```bash
+cargo install --git https://github.com/Devon-Scott/grade_calculator
